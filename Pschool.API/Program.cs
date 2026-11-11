@@ -18,6 +18,11 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    // Test page for trying the API in the browser: /swagger
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/openapi/v1.json", "Pschool API");
+    });
 }
 
 app.UseHttpsRedirection();
