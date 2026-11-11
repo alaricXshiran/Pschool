@@ -5,6 +5,7 @@
 
    public class PschoolDbContext : DbContext
    {
+    // Represents the database. Each DbSet below is one table.
        public PschoolDbContext(DbContextOptions<PschoolDbContext> options)
            : base(options)
        {
@@ -15,6 +16,8 @@
 
        protected override void OnModelCreating(ModelBuilder modelBuilder)
        {
+        // Restrict: a parent who still has students cannot be deleted,
+           // so we never end up with students that have no parent.
            modelBuilder.Entity<Student>()
                .HasOne(student => student.Parent)
                .WithMany(parent => parent.Students)
