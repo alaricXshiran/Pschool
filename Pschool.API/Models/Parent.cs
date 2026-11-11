@@ -11,4 +11,5 @@ public class Parent
     public string? Phone1 { get; set; }
     public string? WorkPhone { get; set; }
     public string? HomePhone { get; set; }
+    public List<Student> Students { get; set; } = new();
 }
