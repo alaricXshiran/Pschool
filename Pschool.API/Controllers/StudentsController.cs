@@ -33,24 +33,54 @@ public class StudentsController : ControllerBase
         });
     }
 
-    // GET /api/students              - returns every student.
-    // GET /api/students?parentId=1   - returns only that parent's students.
+    // GET /api/students?parentId=1&page=1&pageSize=10&search=alaric
+    // Returns one page of students, optionally filtered by parent and search word.
     [HttpGet]
-    public async Task<ActionResult<List<StudentResponse>>> GetStudents([FromQuery] int? parentId)
+    public async Task<ActionResult<PagedResult<StudentResponse>>> GetStudents(
+        [FromQuery] int? parentId = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? search = null)
     {
+        // Keep the values sensible: page starts at 1, at most 100 rows per page.
+        page = Math.Max(page, 1);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
         var query = StudentResponses();
 
-        // Only filter when a parent was chosen.
+        // Only this parent's students, when a parent was chosen.
         if (parentId.HasValue)
         {
             query = query.Where(item => item.ParentId == parentId.Value);
         }
 
-        var students = await query
+        // Search in the student's names and the parent's name, ignoring case.
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim().ToLower();
+
+            query = query.Where(item =>
+                item.FirstName.ToLower().Contains(term) ||
+                item.LastName.ToLower().Contains(term) ||
+                item.ParentName.ToLower().Contains(term));
+        }
+
+        // Count all matches before cutting out one page.
+        var totalCount = await query.CountAsync();
+
+        var items = await query
             .OrderBy(item => item.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
-        return Ok(students);
+        return Ok(new PagedResult<StudentResponse>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        });
     }
 
     // GET /api/students/5 - returns the one student with that Id.
