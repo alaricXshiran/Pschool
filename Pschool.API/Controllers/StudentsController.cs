@@ -67,4 +67,35 @@ public class StudentsController : ControllerBase
 
         return Ok(student);
     }
+
+    // POST /api/students - saves a new student sent in the request.
+    [HttpPost]
+    public async Task<ActionResult<StudentResponse>> CreateStudent(StudentRequest request)
+    {
+        // Every student must belong to an existing parent.
+        var parentExists = await _context.Parents.AnyAsync(parent => parent.Id == request.ParentId);
+
+        if (!parentExists)
+        {
+            return BadRequest($"Parent with Id {request.ParentId} does not exist.");
+        }
+
+        // Copy the allowed fields into a new Student. The Id is left for the database.
+        var student = new Student
+        {
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            DateOfBirth = request.DateOfBirth,
+            ParentId = request.ParentId
+        };
+
+        _context.Students.Add(student);
+        await _context.SaveChangesAsync();
+
+        // Read it back in reply format (with the parent's name) and answer "201 Created".
+        var response = await StudentResponses()
+            .FirstAsync(item => item.Id == student.Id);
+
+        return CreatedAtAction(nameof(GetStudent), new { id = student.Id }, response);
+    }
 }
