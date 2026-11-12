@@ -22,6 +22,15 @@ builder.Services.AddDbContext<PschoolDbContext>(options =>
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+// In development: bring the database up to date and add sample data if it is empty.
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<PschoolDbContext>();
+
+    await context.Database.MigrateAsync();
+    await DbSeeder.SeedAsync(context);
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
