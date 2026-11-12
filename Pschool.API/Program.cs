@@ -6,6 +6,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
+// Describe numbers strictly as numbers in the API description,
+// so the Swagger test page handles Id boxes correctly.
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict);
 // When turning objects into JSON, skip links that loop back
 // (parent -> student -> same parent) instead of failing.
 builder.Services.AddControllers()
