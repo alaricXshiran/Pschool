@@ -128,4 +128,20 @@ public class StudentsController : ControllerBase
         // "204 No Content": it worked, and there is nothing to send back.
         return NoContent();
     }
+    // DELETE /api/students/5 - removes a student.
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteStudent(int id)
+    {
+        var student = await _context.Students.FindAsync(id);
+
+        if (student == null)
+        {
+            return NotFound();
+        }
+
+        _context.Students.Remove(student);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
 }
