@@ -38,15 +38,48 @@ public class ParentsController : ControllerBase
         });
     }
 
-    // GET /api/parents - returns every parent.
+    // GET /api/parents?page=1&pageSize=10&search=chamila
+    // Returns one page of parents, optionally filtered by a search word.
     [HttpGet]
-    public async Task<ActionResult<List<ParentResponse>>> GetParents()
+    public async Task<ActionResult<PagedResult<ParentResponse>>> GetParents(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? search = null)
     {
-        var parents = await ParentResponses()
+        // Keep the values sensible: page starts at 1, at most 100 rows per page.
+        page = Math.Max(page, 1);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        var query = ParentResponses();
+
+        // Search in names, username and email, ignoring upper/lower case.
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim().ToLower();
+
+            query = query.Where(item =>
+                item.FirstName.ToLower().Contains(term) ||
+                item.LastName.ToLower().Contains(term) ||
+                (item.Username != null && item.Username.ToLower().Contains(term)) ||
+                (item.Email != null && item.Email.ToLower().Contains(term)));
+        }
+
+        // Count all matches before cutting out one page.
+        var totalCount = await query.CountAsync();
+
+        var items = await query
             .OrderBy(item => item.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
-        return Ok(parents);
+        return Ok(new PagedResult<ParentResponse>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        });
     }
 
     // GET /api/parents/5 - returns the one parent with that Id.
