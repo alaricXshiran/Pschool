@@ -68,7 +68,7 @@ public class StudentsController : ControllerBase
         return Ok(student);
     }
 
-    // POST /api/students - saves a new student sent in the request.
+    // POST /api/students - creates a new student sent in the request.
     [HttpPost]
     public async Task<ActionResult<StudentResponse>> CreateStudent(StudentRequest request)
     {
@@ -97,5 +97,35 @@ public class StudentsController : ControllerBase
             .FirstAsync(item => item.Id == student.Id);
 
         return CreatedAtAction(nameof(GetStudent), new { id = student.Id }, response);
+    }
+    // PUT /api/students/5 - replaces the details of an existing student.
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateStudent(int id, StudentRequest request)
+    {
+        var student = await _context.Students.FindAsync(id);
+
+        if (student == null)
+        {
+            return NotFound();
+        }
+
+        // The (possibly new) parent must exist.
+        var parentExists = await _context.Parents.AnyAsync(parent => parent.Id == request.ParentId);
+
+        if (!parentExists)
+        {
+            return BadRequest($"Parent with Id {request.ParentId} does not exist.");
+        }
+
+        // Copy the new values over the old ones.
+        student.FirstName = request.FirstName;
+        student.LastName = request.LastName;
+        student.DateOfBirth = request.DateOfBirth;
+        student.ParentId = request.ParentId;
+
+        await _context.SaveChangesAsync();
+
+        // "204 No Content": it worked, and there is nothing to send back.
+        return NoContent();
     }
 }
