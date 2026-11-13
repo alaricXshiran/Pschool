@@ -1,0 +1,47 @@
+   @page "/parents"
+   @inject HttpClient Http
+
+   <PageTitle>Parents</PageTitle>
+
+   <h1>Parents</h1>
+
+   @if (errorMessage != null)
+   {
+       <div class="alert alert-danger">@errorMessage</div>
+   }
+   else if (result == null)
+   {
+       <p>Loading...</p>
+   }
+   else
+   {
+       <p>@result.TotalCount parents found.</p>
+
+       <ul>
+           @foreach (var parent in result.Items)
+           {
+               <li>@parent.FirstName @parent.LastName (@parent.SiblingsCount students)</li>
+           }
+       </ul>
+   }
+
+   @code {
+       // The page of parents from the API; null until it arrives.
+       private PagedResult<ParentResponse>? result;
+
+       // Shown instead of the list if the API can't be reached.
+       private string? errorMessage;
+
+       // Runs once when the page opens.
+       protected override async Task OnInitializedAsync()
+       {
+           try
+           {
+               result = await Http.GetFromJsonAsync<PagedResult<ParentResponse>>("api/parents");
+           }
+           catch (HttpRequestException)
+           {
+               errorMessage = "Could not reach the API. Check that it is running.";
+           }
+       }
+   }
