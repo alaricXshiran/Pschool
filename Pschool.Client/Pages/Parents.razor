@@ -81,15 +81,17 @@
                                 <span class="siblings-badge">@parent.SiblingsCount</span>
                             </td>
                             <td class="text-end text-nowrap">
-                                <button class="btn btn-icon" title="View"
-                                        aria-label="View @parent.FirstName @parent.LastName"
+                                <button class="btn btn-icon" title="View" aria-label="View @parent.FirstName @parent.LastName"
                                         @onclick="() => OpenView(parent)">
                                     <i class="bi bi-eye"></i>
                                 </button>
-                                <button class="btn btn-icon" title="Edit"
-                                        aria-label="Edit @parent.FirstName @parent.LastName"
+                                <button class="btn btn-icon" title="Edit" aria-label="Edit @parent.FirstName @parent.LastName"
                                         @onclick="() => OpenEdit(parent)">
                                     <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <button class="btn btn-icon btn-icon-danger" title="Delete"
+                                        aria-label="Delete @parent.FirstName @parent.LastName" @onclick="() => OpenDelete(parent)">
+                                    <i class="bi bi-trash"></i>
                                 </button>
                             </td>
                         </tr>
@@ -103,14 +105,11 @@
     }
 </div>
 
+
 @* ---- Add / edit window ---- *@
 <Modal IsOpen="isFormOpen" Title="@(editingId == null ? "Add parent" : "Edit parent")" OnClose="CloseForm">
-    <ParentForm Model="formModel"
-                SubmitText="@(editingId == null ? "Add parent" : "Save changes")"
-                IsSaving="isSaving"
-                ErrorMessage="@formError"
-                OnSave="SaveAsync"
-                OnCancel="CloseForm" />
+    <ParentForm Model="formModel" SubmitText="@(editingId == null ? "Add parent" : "Save changes")" IsSaving="isSaving"
+                ErrorMessage="@formError" OnSave="SaveAsync" OnCancel="CloseForm" />
 </Modal>
 
 @* ---- View details window (read-only) ---- *@
@@ -174,6 +173,47 @@
     }
 </Modal>
 
+@* ---- Delete confirmation window ---- *@
+<Modal IsOpen="deleteParent != null" Title="Delete parent" OnClose="CloseDelete">
+    @if (deleteParent != null)
+    {
+        @if (!string.IsNullOrWhiteSpace(deleteError))
+        {
+            <div class="alert alert-danger py-2">@deleteError</div>
+        }
+
+        @if (deleteParent.SiblingsCount > 0)
+        {
+            @* Blocked: every student must keep a parent. *@
+            <p>
+                <strong>@deleteParent.FirstName @deleteParent.LastName</strong>
+                has @deleteParent.SiblingsCount student(s) and cannot be deleted.
+            </p>
+            <p class="text-muted mb-0">Delete those students or move them to another parent first.</p>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-outline-secondary" @onclick="CloseDelete">Close</button>
+            </div>
+        }
+        else
+        {
+            <p>
+                Delete <strong>@deleteParent.FirstName @deleteParent.LastName</strong>?
+                This cannot be undone.
+            </p>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-outline-secondary" @onclick="CloseDelete" disabled="@isDeleting">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-danger" @onclick="ConfirmDeleteAsync" disabled="@isDeleting">
+                    @(isDeleting ? "Deleting..." : "Delete")
+                </button>
+            </div>
+        }
+    }
+</Modal>
+
 @code {
     // How many parents to show per page.
     private const int PageSize = 10;
@@ -203,6 +243,7 @@
     // Id of the parent being edited, or null when adding a new one.
     private int? editingId;
 
+
     // ---- View details ----
     // The parent being viewed; the window is open while this is not null.
     private ParentResponse? viewParent;
@@ -210,6 +251,13 @@
     // That parent's children; null while loading.
     private List<StudentResponse>? viewChildren;
     private string? viewError;
+
+
+    // ---- Delete ----
+    // The parent awaiting confirmation; the window is open while this is not null.
+    private ParentResponse? deleteParent;
+    private bool isDeleting;
+    private string? deleteError;
 
     protected override async Task OnInitializedAsync()
     {
@@ -322,6 +370,53 @@
     private void CloseView()
     {
         viewParent = null;
+    }
+
+    // Open the confirmation window for this parent.
+    private void OpenDelete(ParentResponse parent)
+    {
+        deleteParent = parent;
+        deleteError = null;
+        successMessage = null;
+    }
+
+    private void CloseDelete()
+    {
+        deleteParent = null;
+    }
+
+    // Called when the user confirms the delete.
+    private async Task ConfirmDeleteAsync()
+    {
+        if (deleteParent == null)
+        {
+            return;
+        }
+
+        isDeleting = true;
+        deleteError = null;
+
+        var outcome = await ParentService.DeleteAsync(deleteParent.Id);
+
+        isDeleting = false;
+
+        if (!outcome.Success)
+        {
+            // e.g. a student was added meanwhile: show the API's reason.
+            deleteError = outcome.ErrorMessage;
+            return;
+        }
+
+        successMessage = $"{deleteParent.FirstName} {deleteParent.LastName} was deleted.";
+        deleteParent = null;
+
+        // If that was the only row on a later page, step back one page.
+        if (result != null && result.Items.Count == 1 && currentPage > 1)
+        {
+            currentPage--;
+        }
+
+        await LoadAsync();
     }
 
     // Runs on every keystroke. Waits for a short pause, then searches once.

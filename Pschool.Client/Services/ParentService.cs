@@ -53,4 +53,18 @@ public class ParentService
             return ApiResult.Fail("Could not reach the API. Check that it is running.");
         }
     }
+
+    // Delete a parent. The API refuses (409) if they still have students.
+    public async Task<ApiResult> DeleteAsync(int id)
+    {
+        try
+        {
+            var response = await _http.DeleteAsync($"api/parents/{id}");
+            return await ApiResult.FromResponseAsync(response);
+        }
+        catch (HttpRequestException)
+        {
+            return ApiResult.Fail("Could not reach the API. Check that it is running.");
+        }
+    }
 }
