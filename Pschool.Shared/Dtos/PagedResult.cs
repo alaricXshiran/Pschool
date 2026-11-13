@@ -1,4 +1,4 @@
-   namespace Pschool.API.Dtos;
+   namespace Pschool.Shared.Dtos;
 
    // One page of results, plus what the frontend needs to show paging controls.
    // T is the kind of row: ParentResponse or StudentResponse.

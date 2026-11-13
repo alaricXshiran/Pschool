@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pschool.API.Data;
-using Pschool.API.Dtos;
+using Pschool.Shared.Dtos;
 using Pschool.API.Models;
 
 namespace Pschool.API.Controllers;

@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="Pschool.API/Pschool.API.csproj" />
   <Project Path="Pschool.Client/Pschool.Client.csproj" />
+  <Project Path="Pschool.Shared/Pschool.Shared.csproj" />
 </Solution>
