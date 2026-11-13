@@ -1,113 +1,61 @@
-.page {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-}
+   /* ---- Overall frame: menu on the left, content on the right ---- */
+   .page {
+       position: relative;
+       display: flex;
+       flex-direction: column;
+   }
 
-main {
-    flex: 1;
-}
+   main {
+       flex: 1;
+   }
 
-.sidebar {
-    background-color: var(--ps-sidebar);
-}
+   .sidebar {
+       background-color: var(--ps-sidebar);
+   }
 
-   /* ---- Top of the menu: brand name ---- */
+   /* ---- Top bar ---- */
    .top-row {
-       min-height: 3.5rem;
-       background-color: var(--ps-sidebar-dark);
-   }
-
-   .navbar-brand {
-       font-size: 1.2rem;
-       font-weight: 700;
-       letter-spacing: 0.02em;
-       color: #ffffff;
-   }
-
-   .brand-icon {
-       color: var(--ps-accent);
-       margin-right: 0.4rem;
-   }
-
-   /* ---- Menu links ---- */
-   .bi {
-       font-size: 1.1rem;
-       margin-right: 0.75rem;
-   }
-
-   .nav-item {
-       font-size: 0.95rem;
-       padding-bottom: 0.25rem;
-   }
-
-   .nav-item:first-of-type {
-       padding-top: 1rem;
-   }
-
-   .nav-item ::deep .nav-link {
-       color: var(--ps-sidebar-text);
-       border-radius: 6px;
-       border-left: 3px solid transparent;
-       height: 2.75rem;
+       background-color: var(--ps-card);
+       border-bottom: 1px solid var(--ps-border);
+       height: 3.5rem;
        display: flex;
        align-items: center;
-       width: 100%;
-       transition: background-color 0.15s, color 0.15s;
+       justify-content: space-between;
    }
 
-   .nav-item ::deep .nav-link:hover {
-       background-color: rgba(255, 255, 255, 0.06);
-       color: #ffffff;
+   .app-subtitle {
+       color: var(--ps-muted);
+       font-size: 0.9rem;
+       font-weight: 500;
    }
 
-   /* The open page: amber bar on the left and brighter text. */
-   .nav-item ::deep a.active {
-       background-color: rgba(242, 166, 90, 0.14);
-       border-left-color: var(--ps-accent);
-       color: #ffffff;
-       font-weight: 600;
+   /* ---- Page content ---- */
+   .content {
+       padding-top: 1.75rem;
+       padding-bottom: 2rem;
    }
 
-   .nav-item ::deep a.active .bi {
-       color: var(--ps-accent);
-   }
-
-   /* ---- Small screens: menu opens with the button ---- */
-   .navbar-toggler {
-       appearance: none;
-       cursor: pointer;
-       width: 3.5rem;
-       height: 2.5rem;
-       position: absolute;
-       top: 0.5rem;
-       right: 1rem;
-       border: 1px solid rgba(255, 255, 255, 0.1);
-       border-radius: 6px;
-       background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.7%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") no-repeat center/1.75rem rgba(255, 255, 255, 0.08);
-   }
-
-   .navbar-toggler:checked {
-       background-color: rgba(242, 166, 90, 0.35);
-   }
-
-   .nav-scrollable {
-       display: none;
-   }
-
-   .navbar-toggler:checked ~ .nav-scrollable {
-       display: block;
-   }
-
-   /* ---- Wide screens: menu always visible ---- */
+   /* ---- Wide screens: fixed-width menu that stays in place while scrolling ---- */
    @media (min-width: 641px) {
-       .navbar-toggler {
-           display: none;
+       .page {
+           flex-direction: row;
        }
 
-       .nav-scrollable {
-           display: block;
-           height: calc(100vh - 3.5rem);
-           overflow-y: auto;
+       .sidebar {
+           width: 240px;
+           height: 100vh;
+           position: sticky;
+           top: 0;
+       }
+
+       .top-row {
+           position: sticky;
+           top: 0;
+           z-index: 1;
+       }
+
+       .top-row, article {
+           padding-left: 2rem !important;
+           padding-right: 2rem !important;
        }
    }
