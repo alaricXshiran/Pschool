@@ -15,5 +15,6 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseU
 
 // Services that pages use to talk to the API.
 builder.Services.AddScoped<ParentService>();
+builder.Services.AddScoped<StudentService>();
 
 await builder.Build().RunAsync();

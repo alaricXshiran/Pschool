@@ -1,5 +1,6 @@
 @page "/parents"
 @inject ParentService ParentService
+@inject StudentService StudentService
 @implements IDisposable
 
 <PageTitle>Parents</PageTitle>
@@ -79,7 +80,12 @@
                             <td class="text-center">
                                 <span class="siblings-badge">@parent.SiblingsCount</span>
                             </td>
-                            <td class="text-end">
+                            <td class="text-end text-nowrap">
+                                <button class="btn btn-icon" title="View"
+                                        aria-label="View @parent.FirstName @parent.LastName"
+                                        @onclick="() => OpenView(parent)">
+                                    <i class="bi bi-eye"></i>
+                                </button>
                                 <button class="btn btn-icon" title="Edit"
                                         aria-label="Edit @parent.FirstName @parent.LastName"
                                         @onclick="() => OpenEdit(parent)">
@@ -97,6 +103,7 @@
     }
 </div>
 
+@* ---- Add / edit window ---- *@
 <Modal IsOpen="isFormOpen" Title="@(editingId == null ? "Add parent" : "Edit parent")" OnClose="CloseForm">
     <ParentForm Model="formModel"
                 SubmitText="@(editingId == null ? "Add parent" : "Save changes")"
@@ -104,6 +111,67 @@
                 ErrorMessage="@formError"
                 OnSave="SaveAsync"
                 OnCancel="CloseForm" />
+</Modal>
+
+@* ---- View details window (read-only) ---- *@
+<Modal IsOpen="viewParent != null" Title="Parent details" OnClose="CloseView">
+    @if (viewParent != null)
+    {
+        <dl class="details-grid">
+            <dt>Name</dt>
+            <dd>@viewParent.FirstName @viewParent.LastName</dd>
+
+            <dt>Username</dt>
+            <dd>@ShowOrDash(viewParent.Username)</dd>
+
+            <dt>Email</dt>
+            <dd>@ShowOrDash(viewParent.Email)</dd>
+
+            <dt>Home address</dt>
+            <dd>@ShowOrDash(viewParent.HomeAddress)</dd>
+
+            <dt>Phone 1</dt>
+            <dd>@ShowOrDash(viewParent.Phone1)</dd>
+
+            <dt>Work phone</dt>
+            <dd>@ShowOrDash(viewParent.WorkPhone)</dd>
+
+            <dt>Home phone</dt>
+            <dd>@ShowOrDash(viewParent.HomePhone)</dd>
+        </dl>
+
+        <h3 class="details-subheading">Children (@viewParent.SiblingsCount)</h3>
+
+        @if (viewError != null)
+        {
+            <div class="alert alert-danger py-2">@viewError</div>
+        }
+        else if (viewChildren == null)
+        {
+            <p class="text-muted mb-0">Loading...</p>
+        }
+        else if (viewChildren.Count == 0)
+        {
+            <p class="text-muted mb-0">No students registered for this parent.</p>
+        }
+        else
+        {
+            <ul class="children-list">
+                @foreach (var child in viewChildren)
+                {
+                    <li>
+                        <i class="bi bi-person-fill" aria-hidden="true"></i>
+                        <span class="fw-semibold">@child.FirstName @child.LastName</span>
+                        <span class="text-muted ms-auto">Born @child.DateOfBirth.ToString("d MMM yyyy")</span>
+                    </li>
+                }
+            </ul>
+        }
+
+        <div class="form-actions">
+            <button type="button" class="btn btn-outline-secondary" @onclick="CloseView">Close</button>
+        </div>
+    }
 </Modal>
 
 @code {
@@ -134,6 +202,14 @@
 
     // Id of the parent being edited, or null when adding a new one.
     private int? editingId;
+
+    // ---- View details ----
+    // The parent being viewed; the window is open while this is not null.
+    private ParentResponse? viewParent;
+
+    // That parent's children; null while loading.
+    private List<StudentResponse>? viewChildren;
+    private string? viewError;
 
     protected override async Task OnInitializedAsync()
     {
@@ -222,6 +298,30 @@
             ? $"{request.FirstName} {request.LastName} was added."
             : $"{request.FirstName} {request.LastName} was updated.";
         await LoadAsync();
+    }
+
+    // Open the details window, then load this parent's children.
+    private async Task OpenView(ParentResponse parent)
+    {
+        viewParent = parent;
+        viewChildren = null;
+        viewError = null;
+
+        try
+        {
+            // The API allows at most 100 per page, far more than one family has.
+            var children = await StudentService.GetPageAsync(page: 1, pageSize: 100, parentId: parent.Id);
+            viewChildren = children.Items;
+        }
+        catch (Exception)
+        {
+            viewError = "Could not load this parent's students.";
+        }
+    }
+
+    private void CloseView()
+    {
+        viewParent = null;
     }
 
     // Runs on every keystroke. Waits for a short pause, then searches once.
