@@ -13,9 +13,19 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 builder.Services.AddControllers();
 
-   builder.Services.AddDbContext<PschoolDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<PschoolDbContext>(options =>
+ options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+// Allow the Blazor client to call this API from its own address.
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? [];
+
+builder.Services.AddCors(options =>
+    options.AddPolicy("Client", policy => policy
+        .WithOrigins(allowedOrigins)
+        .AllowAnyHeader()
+        .AllowAnyMethod()));
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
@@ -41,6 +51,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("Client");
 
 app.UseAuthorization();
 
