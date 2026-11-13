@@ -19,6 +19,85 @@
        background-color: var(--ps-page);
        color: var(--ps-text);
    }
+      /* ---- Page header: title and subtitle above the card ---- */
+   .page-header {
+       display: flex;
+       justify-content: space-between;
+       align-items: flex-end;
+       gap: 1rem;
+       margin-bottom: 1.25rem;
+   }
+
+   .page-header h1 {
+       font-size: 1.6rem;
+       font-weight: 700;
+       margin: 0;
+   }
+
+   .page-subtitle {
+       color: var(--ps-muted);
+       margin: 0.25rem 0 0;
+   }
+
+   /* ---- Card holding a table ---- */
+   .ps-card {
+       background-color: var(--ps-card);
+       border: 1px solid var(--ps-border);
+       border-radius: 12px;
+       box-shadow: 0 1px 3px rgba(16, 24, 40, 0.06);
+       overflow: hidden;
+   }
+
+   .ps-card-header {
+       padding: 1rem 1.25rem;
+       border-bottom: 1px solid var(--ps-border);
+   }
+
+   .ps-card-header h2 {
+       font-size: 1rem;
+       font-weight: 600;
+       margin: 0;
+   }
+
+   .state-message {
+       color: var(--ps-muted);
+       padding: 2rem 1.25rem;
+       margin: 0;
+       text-align: center;
+   }
+
+   /* ---- Data tables ---- */
+   .ps-table th {
+       background-color: #f9fafb;
+       color: var(--ps-muted);
+       font-size: 0.75rem;
+       font-weight: 600;
+       text-transform: uppercase;
+       letter-spacing: 0.04em;
+       white-space: nowrap;
+       padding: 0.75rem 1rem;
+   }
+
+   .ps-table td {
+       font-size: 0.9rem;
+       padding: 0.8rem 1rem;
+       border-color: var(--ps-border);
+   }
+
+   .ps-table tbody tr:hover td {
+       background-color: rgba(242, 166, 90, 0.06);
+   }
+
+   .siblings-badge {
+       display: inline-block;
+       min-width: 1.75rem;
+       padding: 0.15rem 0.5rem;
+       border-radius: 999px;
+       background-color: rgba(242, 166, 90, 0.18);
+       color: #9a5a12;
+       font-weight: 600;
+       font-size: 0.8rem;
+   }
 
 h1:focus {
     outline: none;

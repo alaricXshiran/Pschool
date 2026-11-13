@@ -1,47 +1,170 @@
-   @page "/parents"
-   @inject HttpClient Http
+@page "/parents"
+@inject ParentService ParentService
+@implements IDisposable
 
-   <PageTitle>Parents</PageTitle>
+<PageTitle>Parents</PageTitle>
 
-   <h1>Parents</h1>
+<div class="page-header">
+    <div>
+        <h1>Parents</h1>
+        <p class="page-subtitle">Parents and guardians registered at the school</p>
+    </div>
+</div>
 
-   @if (errorMessage != null)
-   {
-       <div class="alert alert-danger">@errorMessage</div>
-   }
-   else if (result == null)
-   {
-       <p>Loading...</p>
-   }
-   else
-   {
-       <p>@result.TotalCount parents found.</p>
+<div class="ps-card">
+    <div class="ps-card-header">
+        <h2>Parents / Guardians List</h2>
+        <div class="search-box">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input type="search" class="form-control form-control-sm" placeholder="Search name, username or email"
+                   aria-label="Search parents" @bind="searchText" @bind:event="oninput" @bind:after="OnSearchChanged" />
+        </div>
+    </div>
 
-       <ul>
-           @foreach (var parent in result.Items)
-           {
-               <li>@parent.FirstName @parent.LastName (@parent.SiblingsCount students)</li>
-           }
-       </ul>
-   }
+    @if (errorMessage != null)
+    {
+        <div class="alert alert-danger m-3">@errorMessage</div>
+    }
+    else if (result == null)
+    {
+        <p class="state-message">Loading...</p>
+    }
+    else if (result.Items.Count == 0)
+    {
+        <p class="state-message">
+            @(string.IsNullOrWhiteSpace(searchText)
+                ? "No parents found."
+                : $"No parents match \"{searchText}\".")
+        </p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            
+            <table class="table ps-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Home Address</th>
+                        <th>Phone 1</th>
+                        <th>Work Phone</th>
+                        <th>Home Phone</th>
+                        <th class="text-center">Siblings</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var parent in result.Items)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@parent.FirstName</td>
+                            <td class="fw-semibold">@parent.LastName</td>
+                            <td>@ShowOrDash(parent.Username)</td>
+                            <td>@ShowOrDash(parent.Email)</td>
+                            <td>@ShowOrDash(parent.HomeAddress)</td>
+                            <td>@ShowOrDash(parent.Phone1)</td>
+                            <td>@ShowOrDash(parent.WorkPhone)</td>
+                            <td>@ShowOrDash(parent.HomePhone)</td>
+                            <td class="text-center">
+                                <span class="siblings-badge">@parent.SiblingsCount</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <Pager Page="result.Page" PageSize="result.PageSize" TotalCount="result.TotalCount" TotalPages="result.TotalPages"
+               PageChanged="GoToPage" />
+    }
+</div>
 
-   @code {
-       // The page of parents from the API; null until it arrives.
-       private PagedResult<ParentResponse>? result;
+@code {
+    // How many parents to show per page.
+    private const int PageSize = 10;
 
-       // Shown instead of the list if the API can't be reached.
-       private string? errorMessage;
+    // The page currently shown, starting at 1.
+    private int currentPage = 1;
 
-       // Runs once when the page opens.
-       protected override async Task OnInitializedAsync()
-       {
-           try
-           {
-               result = await Http.GetFromJsonAsync<PagedResult<ParentResponse>>("api/parents");
-           }
-           catch (HttpRequestException)
-           {
-               errorMessage = "Could not reach the API. Check that it is running.";
-           }
-       }
-   }
+    // What the user typed in the search box.
+    private string searchText = string.Empty;
+
+    // Used to cancel a waiting search when the user keeps typing.
+    private CancellationTokenSource? searchDelay;
+
+    // The page of parents from the API; null until it arrives.
+    private PagedResult<ParentResponse>? result;
+
+    // Shown instead of the table if loading fails.
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    // Fetch the current page from the API, using the search text.
+    private async Task LoadAsync()
+    {
+        errorMessage = null;
+
+        try
+        {
+            result = await ParentService.GetPageAsync(currentPage, PageSize, searchText);
+        }
+        catch (Exception)
+        {
+            errorMessage = "Could not load parents. Check that the API is running.";
+        }
+    }
+
+    // Called by the Pager when Previous or Next is clicked.
+    private async Task GoToPage(int page)
+    {
+        currentPage = page;
+        await LoadAsync();
+    }
+
+    // Runs on every keystroke. Waits for a short pause, then searches once.
+    private async Task OnSearchChanged()
+    {
+        // Cancel the previous wait: the user is still typing.
+        searchDelay?.Cancel();
+        searchDelay = new CancellationTokenSource();
+        var token = searchDelay.Token;
+
+        try
+        {
+            await Task.Delay(300, token);
+        }
+        catch (TaskCanceledException)
+        {
+            return;
+        }
+
+        // A new search starts from the first page.
+        currentPage = 1;
+        await LoadAsync();
+    }
+
+    // Called when the user leaves the page: stop any waiting search.
+    public void Dispose()
+    {
+        searchDelay?.Cancel();
+        searchDelay?.Dispose();
+    }
+
+    // Optional fields: show the value, or a soft dash when empty.
+    private static RenderFragment ShowOrDash(string? value) => builder =>
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            builder.AddMarkupContent(0, "<span class=\"text-muted\">&mdash;</span>");
+        }
+        else
+        {
+            builder.AddContent(0, value);
+        }
+    };
+}

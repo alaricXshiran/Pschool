@@ -1,0 +1,21 @@
+   .pager {
+       display: flex;
+       justify-content: space-between;
+       align-items: center;
+       flex-wrap: wrap;
+       gap: 0.75rem;
+       padding: 0.85rem 1.25rem;
+       border-top: 1px solid var(--ps-border);
+   }
+
+   .pager-summary,
+   .pager-position {
+       color: var(--ps-muted);
+       font-size: 0.85rem;
+   }
+
+   .pager-buttons {
+       display: flex;
+       align-items: center;
+       gap: 0.75rem;
+   }
