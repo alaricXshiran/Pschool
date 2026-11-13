@@ -1,7 +1,10 @@
-﻿@page "/"
+﻿   @page "/"
+   @inject NavigationManager Navigation
 
-<PageTitle>Home</PageTitle>
-
-<h1>Hello, world!</h1>
-
-Welcome to your new app.
+   @code {
+       // The app has no home page of its own: open the parents list instead.
+       protected override void OnInitialized()
+       {
+           Navigation.NavigateTo("parents", replace: true);
+       }
+   }
