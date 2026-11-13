@@ -40,4 +40,17 @@ public class ParentService
             return ApiResult.Fail("Could not reach the API. Check that it is running.");
         }
     }
+    // Send changed details for an existing parent.(update)
+    public async Task<ApiResult> UpdateAsync(int id, ParentRequest request)
+    {
+        try
+        {
+            var response = await _http.PutAsJsonAsync($"api/parents/{id}", request);
+            return await ApiResult.FromResponseAsync(response);
+        }
+        catch (HttpRequestException)
+        {
+            return ApiResult.Fail("Could not reach the API. Check that it is running.");
+        }
+    }
 }

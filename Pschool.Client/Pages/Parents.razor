@@ -49,7 +49,6 @@
     else
     {
         <div class="table-responsive">
-            
             <table class="table ps-table align-middle mb-0">
                 <thead>
                     <tr>
@@ -62,6 +61,7 @@
                         <th>Work Phone</th>
                         <th>Home Phone</th>
                         <th class="text-center">Siblings</th>
+                        <th class="text-end">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -79,18 +79,31 @@
                             <td class="text-center">
                                 <span class="siblings-badge">@parent.SiblingsCount</span>
                             </td>
+                            <td class="text-end">
+                                <button class="btn btn-icon" title="Edit"
+                                        aria-label="Edit @parent.FirstName @parent.LastName"
+                                        @onclick="() => OpenEdit(parent)">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                            </td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
+
         <Pager Page="result.Page" PageSize="result.PageSize" TotalCount="result.TotalCount" TotalPages="result.TotalPages"
                PageChanged="GoToPage" />
     }
 </div>
-<Modal IsOpen="isFormOpen" Title="Add parent" OnClose="CloseForm">
-    <ParentForm Model="formModel" SubmitText="Add parent" IsSaving="isSaving" ErrorMessage="@formError"
-                OnSave="SaveAsync" OnCancel="CloseForm" />
+
+<Modal IsOpen="isFormOpen" Title="@(editingId == null ? "Add parent" : "Edit parent")" OnClose="CloseForm">
+    <ParentForm Model="formModel"
+                SubmitText="@(editingId == null ? "Add parent" : "Save changes")"
+                IsSaving="isSaving"
+                ErrorMessage="@formError"
+                OnSave="SaveAsync"
+                OnCancel="CloseForm" />
 </Modal>
 
 @code {
@@ -111,12 +124,16 @@
 
     // Shown instead of the table if loading fails.
     private string? errorMessage;
-         // ---- Add form ----
-     private bool isFormOpen;
-     private bool isSaving;
-     private string? formError;
-     private string? successMessage;
-     private ParentRequest formModel = new();
+
+    // ---- Add / edit form ----
+    private bool isFormOpen;
+    private bool isSaving;
+    private string? formError;
+    private string? successMessage;
+    private ParentRequest formModel = new();
+
+    // Id of the parent being edited, or null when adding a new one.
+    private int? editingId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -144,41 +161,68 @@
         currentPage = page;
         await LoadAsync();
     }
-         // Open the form with empty fields.
-     private void OpenAdd()
-     {
-         formModel = new ParentRequest();
-         formError = null;
-         successMessage = null;
-         isFormOpen = true;
-     }
 
-     private void CloseForm()
-     {
-         isFormOpen = false;
-     }
+    // Open the form with empty fields.
+    private void OpenAdd()
+    {
+        editingId = null;
+        formModel = new ParentRequest();
+        formError = null;
+        successMessage = null;
+        isFormOpen = true;
+    }
 
-     // Called by the form after it passes validation.
-     private async Task SaveAsync(ParentRequest request)
-     {
-         isSaving = true;
-         formError = null;
+    // Open the form filled with this parent's current details.
+    private void OpenEdit(ParentResponse parent)
+    {
+        editingId = parent.Id;
+        formModel = new ParentRequest
+        {
+            FirstName = parent.FirstName,
+            LastName = parent.LastName,
+            Username = parent.Username,
+            Email = parent.Email,
+            HomeAddress = parent.HomeAddress,
+            Phone1 = parent.Phone1,
+            WorkPhone = parent.WorkPhone,
+            HomePhone = parent.HomePhone
+        };
+        formError = null;
+        successMessage = null;
+        isFormOpen = true;
+    }
 
-         var outcome = await ParentService.CreateAsync(request);
+    private void CloseForm()
+    {
+        isFormOpen = false;
+    }
 
-         isSaving = false;
+    // Called by the form after it passes validation.
+    private async Task SaveAsync(ParentRequest request)
+    {
+        isSaving = true;
+        formError = null;
 
-         if (!outcome.Success)
-         {
-             // Keep the form open and show what the API said.
-             formError = outcome.ErrorMessage;
-             return;
-         }
+        // Add or edit, depending on how the form was opened.
+        var outcome = editingId == null
+            ? await ParentService.CreateAsync(request)
+            : await ParentService.UpdateAsync(editingId.Value, request);
 
-         isFormOpen = false;
-         successMessage = $"{request.FirstName} {request.LastName} was added.";
-         await LoadAsync();
-     }
+        isSaving = false;
+
+        if (!outcome.Success)
+        {
+            // Keep the form open and show what the API said.
+            formError = outcome.ErrorMessage;
+            return;
+        }
+
+        isFormOpen = false;
+        successMessage = editingId == null
+            ? $"{request.FirstName} {request.LastName} was added."
+            : $"{request.FirstName} {request.LastName} was updated.";
+        await LoadAsync();
+    }
 
     // Runs on every keystroke. Waits for a short pause, then searches once.
     private async Task OnSearchChanged()

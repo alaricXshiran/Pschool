@@ -237,3 +237,17 @@ code {
        font-size: 0.8rem;
        margin-top: 0.25rem;
    }
+      /* Small icon-only buttons in table rows */
+   .btn-icon {
+       border: none;
+       background: none;
+       padding: 0.25rem 0.4rem;
+       border-radius: 6px;
+       color: var(--ps-muted);
+       font-size: 1rem;
+   }
+
+   .btn-icon:hover {
+       background-color: rgba(31, 42, 68, 0.08);
+       color: var(--ps-text);
+   }
