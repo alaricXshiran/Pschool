@@ -1,0 +1,30 @@
+   @* A simple pop-up window. The page decides what goes inside and when it is open. *@
+
+   @if (IsOpen)
+   {
+       <div class="modal-backdrop-custom" @onclick="Close"></div>
+
+       <div class="modal-window" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+           <div class="modal-window-header">
+               <h2 id="modal-title">@Title</h2>
+               <button type="button" class="btn-close" aria-label="Close" @onclick="Close"></button>
+           </div>
+
+           <div class="modal-window-body">
+               @ChildContent
+           </div>
+       </div>
+   }
+
+   @code {
+       [Parameter] public bool IsOpen { get; set; }
+       [Parameter] public string Title { get; set; } = string.Empty;
+
+       // Whatever the page puts between <Modal> and </Modal>.
+       [Parameter] public RenderFragment? ChildContent { get; set; }
+
+       // Called when the user clicks the X or the dark background.
+       [Parameter] public EventCallback OnClose { get; set; }
+
+       private Task Close() => OnClose.InvokeAsync();
+   }

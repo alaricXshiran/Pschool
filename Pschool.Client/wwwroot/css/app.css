@@ -210,3 +210,30 @@ code {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+   /* ---- Main action button in the brand amber ---- */
+   .btn-accent {
+       background-color: var(--ps-accent);
+       border-color: var(--ps-accent);
+       color: #1f2a44;
+       font-weight: 600;
+   }
+
+   .btn-accent:hover,
+   .btn-accent:focus {
+       background-color: var(--ps-accent-dark);
+       border-color: var(--ps-accent-dark);
+       color: #1f2a44;
+   }
+
+   .btn-accent:disabled {
+       background-color: var(--ps-accent);
+       border-color: var(--ps-accent);
+       opacity: 0.6;
+   }
+
+   /* Validation messages under form fields */
+   .validation-message {
+       color: #dc3545;
+       font-size: 0.8rem;
+       margin-top: 0.25rem;
+   }

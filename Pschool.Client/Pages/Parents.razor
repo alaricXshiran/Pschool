@@ -9,7 +9,16 @@
         <h1>Parents</h1>
         <p class="page-subtitle">Parents and guardians registered at the school</p>
     </div>
+
+    <button class="btn btn-accent" @onclick="OpenAdd">
+        <i class="bi bi-plus-lg"></i> Add Parent
+    </button>
 </div>
+
+@if (successMessage != null)
+{
+    <div class="alert alert-success py-2">@successMessage</div>
+}
 
 <div class="ps-card">
     <div class="ps-card-header">
@@ -79,6 +88,10 @@
                PageChanged="GoToPage" />
     }
 </div>
+<Modal IsOpen="isFormOpen" Title="Add parent" OnClose="CloseForm">
+    <ParentForm Model="formModel" SubmitText="Add parent" IsSaving="isSaving" ErrorMessage="@formError"
+                OnSave="SaveAsync" OnCancel="CloseForm" />
+</Modal>
 
 @code {
     // How many parents to show per page.
@@ -98,6 +111,12 @@
 
     // Shown instead of the table if loading fails.
     private string? errorMessage;
+         // ---- Add form ----
+     private bool isFormOpen;
+     private bool isSaving;
+     private string? formError;
+     private string? successMessage;
+     private ParentRequest formModel = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -125,6 +144,41 @@
         currentPage = page;
         await LoadAsync();
     }
+         // Open the form with empty fields.
+     private void OpenAdd()
+     {
+         formModel = new ParentRequest();
+         formError = null;
+         successMessage = null;
+         isFormOpen = true;
+     }
+
+     private void CloseForm()
+     {
+         isFormOpen = false;
+     }
+
+     // Called by the form after it passes validation.
+     private async Task SaveAsync(ParentRequest request)
+     {
+         isSaving = true;
+         formError = null;
+
+         var outcome = await ParentService.CreateAsync(request);
+
+         isSaving = false;
+
+         if (!outcome.Success)
+         {
+             // Keep the form open and show what the API said.
+             formError = outcome.ErrorMessage;
+             return;
+         }
+
+         isFormOpen = false;
+         successMessage = $"{request.FirstName} {request.LastName} was added.";
+         await LoadAsync();
+     }
 
     // Runs on every keystroke. Waits for a short pause, then searches once.
     private async Task OnSearchChanged()

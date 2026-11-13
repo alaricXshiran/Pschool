@@ -1,0 +1,92 @@
+   @* Form for adding or editing a parent.
+      Validation rules come from ParentRequest (shared with the API). *@
+
+   <EditForm Model="Model" OnValidSubmit="HandleSubmit">
+       <DataAnnotationsValidator />
+
+       @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+       {
+           <div class="alert alert-danger py-2">@ErrorMessage</div>
+       }
+
+       <div class="row g-3">
+           <div class="col-md-6">
+               <label for="firstName" class="form-label">First name <span class="required">*</span></label>
+               <InputText id="firstName" class="form-control" @bind-Value="Model.FirstName" />
+               <ValidationMessage For="() => Model.FirstName" />
+           </div>
+
+           <div class="col-md-6">
+               <label for="lastName" class="form-label">Last name <span class="required">*</span></label>
+               <InputText id="lastName" class="form-control" @bind-Value="Model.LastName" />
+               <ValidationMessage For="() => Model.LastName" />
+           </div>
+
+           <div class="col-md-6">
+               <label for="username" class="form-label">Username</label>
+               <InputText id="username" class="form-control" @bind-Value="Model.Username" />
+               <ValidationMessage For="() => Model.Username" />
+           </div>
+
+           <div class="col-md-6">
+               <label for="email" class="form-label">Email</label>
+               <InputText id="email" type="email" class="form-control" @bind-Value="Model.Email" />
+               <ValidationMessage For="() => Model.Email" />
+           </div>
+
+           <div class="col-12">
+               <label for="homeAddress" class="form-label">Home address</label>
+               <InputText id="homeAddress" class="form-control" @bind-Value="Model.HomeAddress" />
+               <ValidationMessage For="() => Model.HomeAddress" />
+           </div>
+
+           <div class="col-md-4">
+               <label for="phone1" class="form-label">Phone 1</label>
+               <InputText id="phone1" type="tel" class="form-control" @bind-Value="Model.Phone1" />
+               <ValidationMessage For="() => Model.Phone1" />
+           </div>
+
+           <div class="col-md-4">
+               <label for="workPhone" class="form-label">Work phone</label>
+               <InputText id="workPhone" type="tel" class="form-control" @bind-Value="Model.WorkPhone" />
+               <ValidationMessage For="() => Model.WorkPhone" />
+           </div>
+
+           <div class="col-md-4">
+               <label for="homePhone" class="form-label">Home phone</label>
+               <InputText id="homePhone" type="tel" class="form-control" @bind-Value="Model.HomePhone" />
+               <ValidationMessage For="() => Model.HomePhone" />
+           </div>
+       </div>
+
+       <div class="form-actions">
+           <button type="button" class="btn btn-outline-secondary" @onclick="OnCancel" disabled="@IsSaving">
+               Cancel
+           </button>
+           <button type="submit" class="btn btn-accent" disabled="@IsSaving">
+               @(IsSaving ? "Saving..." : SubmitText)
+           </button>
+       </div>
+   </EditForm>
+
+   @code {
+       // The values being edited. The page creates it (empty for Add, filled for Edit).
+       [Parameter, EditorRequired] public ParentRequest Model { get; set; } = default!;
+
+       // Text on the save button, e.g. "Add parent" or "Save changes".
+       [Parameter] public string SubmitText { get; set; } = "Save";
+
+       // True while the page is waiting for the API; disables the buttons.
+       [Parameter] public bool IsSaving { get; set; }
+
+       // A message from the API, e.g. a server-side validation failure.
+       [Parameter] public string? ErrorMessage { get; set; }
+
+       // Called when the form passes validation and the user saves.
+       [Parameter] public EventCallback<ParentRequest> OnSave { get; set; }
+
+       // Called when the user clicks Cancel.
+       [Parameter] public EventCallback OnCancel { get; set; }
+
+       private Task HandleSubmit() => OnSave.InvokeAsync(Model);
+   }
