@@ -1,7 +1,163 @@
 @page "/students"
+@inject StudentService StudentService
+@implements IDisposable
 
 <PageTitle>Students</PageTitle>
 
-<h1>Students</h1>
+<div class="page-header">
+    <div>
+        <h1>Students</h1>
+        <p class="page-subtitle">Students registered at the school, with their parent</p>
+    </div>
+</div>
 
-<p>The students list will appear here.</p>
+<div class="ps-card">
+    <div class="ps-card-header">
+        <h2>Students List</h2>
+        <div class="search-box">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input type="search" class="form-control form-control-sm" placeholder="Search student or parent name"
+                   aria-label="Search students" @bind="searchText" @bind:event="oninput" @bind:after="OnSearchChanged" />
+        </div>
+    </div>
+
+    @if (errorMessage != null)
+    {
+        <div class="alert alert-danger m-3">@errorMessage</div>
+    }
+    else if (result == null)
+    {
+        <p class="state-message">Loading...</p>
+    }
+    else if (result.Items.Count == 0)
+    {
+        <p class="state-message">
+            @(string.IsNullOrWhiteSpace(searchText)
+                ? "No students found."
+                : $"No students match \"{searchText}\".")
+        </p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table ps-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Date of Birth</th>
+                        <th class="text-center">Age</th>
+                        <th>Parent</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var student in result.Items)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@student.FirstName</td>
+                            <td class="fw-semibold">@student.LastName</td>
+                            <td>@student.DateOfBirth.ToString("d MMM yyyy")</td>
+                            <td class="text-center">@AgeOf(student.DateOfBirth)</td>
+                            <td>
+                                <i class="bi bi-person text-muted" aria-hidden="true"></i>
+                                @student.ParentName
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <Pager Page="result.Page" PageSize="result.PageSize" TotalCount="result.TotalCount" TotalPages="result.TotalPages"
+               PageChanged="GoToPage" />
+    }
+</div>
+
+@code {
+    // How many students to show per page.
+    private const int PageSize = 10;
+
+    // The page currently shown, starting at 1.
+    private int currentPage = 1;
+
+    // What the user typed in the search box.
+    private string searchText = string.Empty;
+
+    // Cancels a waiting search when the user keeps typing.
+    private CancellationTokenSource? searchDelay;
+
+    // The page of students from the API; null until it arrives.
+    private PagedResult<StudentResponse>? result;
+
+    // Shown instead of the table if loading fails.
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    // Fetches the current page using the search text.
+    private async Task LoadAsync()
+    {
+        errorMessage = null;
+
+        try
+        {
+            result = await StudentService.GetPageAsync(currentPage, PageSize, search: searchText);
+        }
+        catch (Exception)
+        {
+            errorMessage = "Could not load students. Check that the API is running.";
+        }
+    }
+
+    // Called by the Pager when Previous or Next is clicked.
+    private async Task GoToPage(int page)
+    {
+        currentPage = page;
+        await LoadAsync();
+    }
+
+    // Waits for a pause in typing, then searches from page 1.
+    private async Task OnSearchChanged()
+    {
+        searchDelay?.Cancel();
+        searchDelay = new CancellationTokenSource();
+        var token = searchDelay.Token;
+
+        try
+        {
+            await Task.Delay(300, token);
+        }
+        catch (TaskCanceledException)
+        {
+            return;
+        }
+
+        currentPage = 1;
+        await LoadAsync();
+    }
+
+    // Stops any waiting search when leaving the page.
+    public void Dispose()
+    {
+        searchDelay?.Cancel();
+        searchDelay?.Dispose();
+    }
+
+    // Age in whole years on today's date.
+    private static int AgeOf(DateOnly dateOfBirth)
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var age = today.Year - dateOfBirth.Year;
+
+        // Not had this year's birthday yet: one year younger.
+        if (dateOfBirth > today.AddYears(-age))
+        {
+            age--;
+        }
+
+        return age;
+    }
+}
