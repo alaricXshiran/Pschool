@@ -10,8 +10,17 @@
         <h1>Students</h1>
         <p class="page-subtitle">Students registered at the school, with their parent</p>
     </div>
+
+    <button class="btn btn-accent" @onclick="OpenAdd" disabled="@(parents.Count == 0)"
+            title="@(parents.Count == 0 ? "Add a parent first" : "Add a new student")">
+        <i class="bi bi-plus-lg"></i> Add Student
+    </button>
 </div>
 
+@if (successMessage != null)
+{
+    <div class="alert alert-success py-2">@successMessage</div>
+}
 <div class="ps-card">
     <div class="ps-card-header">
         <h2>Students List</h2>
@@ -70,6 +79,7 @@
                         <th>Date of Birth</th>
                         <th class="text-center">Age</th>
                         <th>Parent</th>
+                        <th class="text-end">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -84,6 +94,13 @@
                                 <i class="bi bi-person text-muted" aria-hidden="true"></i>
                                 @student.ParentName
                             </td>
+                            <td class="text-end text-nowrap">
+                                <button class="btn btn-icon" title="Edit" aria-label="Edit @student.FirstName @student.LastName"
+                                        @onclick="() => OpenEdit(student)">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                            </td>
+                            
                         </tr>
                     }
                 </tbody>
@@ -94,6 +111,11 @@
                PageChanged="GoToPage" />
     }
 </div>
+@* Add / edit window *@
+<Modal IsOpen="isFormOpen" Title="@(editingId == null ? "Add student" : "Edit student")" OnClose="CloseForm">
+    <StudentForm Model="formModel" Parents="parents" SubmitText="@(editingId == null ? "Add student" : "Save changes")"
+                 IsSaving="isSaving" ErrorMessage="@formError" OnSave="SaveAsync" OnCancel="CloseForm" />
+</Modal>
 
 @code {
     // How many students to show per page.
@@ -113,6 +135,16 @@
 
     // The parent chosen in the dropdown; null means all parents.
     private int? selectedParentId;
+
+    // Add / edit form
+    private bool isFormOpen;
+    private bool isSaving;
+    private string? formError;
+    private string? successMessage;
+    private StudentRequest formModel = new();
+
+    // Id of the student being edited; null when adding.
+    private int? editingId;
 
     // The page of students from the API; null until it arrives.
     private PagedResult<StudentResponse>? result;
@@ -164,6 +196,61 @@
         await LoadAsync();
     }
 
+    // Opens an empty form; pre-selects the filtered parent if there is one.
+    private void OpenAdd()
+    {
+        editingId = null;
+        formModel = new StudentRequest { ParentId = selectedParentId ?? 0 };
+        formError = null;
+        successMessage = null;
+        isFormOpen = true;
+    }
+
+    // Opens the form filled with this student's details.
+    private void OpenEdit(StudentResponse student)
+    {
+        editingId = student.Id;
+        formModel = new StudentRequest
+        {
+            FirstName = student.FirstName,
+            LastName = student.LastName,
+            DateOfBirth = student.DateOfBirth,
+            ParentId = student.ParentId
+        };
+        formError = null;
+        successMessage = null;
+        isFormOpen = true;
+    }
+
+    private void CloseForm()
+    {
+        isFormOpen = false;
+    }
+
+    // Saves as new or as an edit, depending on how the form was opened.
+    private async Task SaveAsync(StudentRequest request)
+    {
+        isSaving = true;
+        formError = null;
+
+        var outcome = editingId == null
+            ? await StudentService.CreateAsync(request)
+            : await StudentService.UpdateAsync(editingId.Value, request);
+
+        isSaving = false;
+
+        if (!outcome.Success)
+        {
+            formError = outcome.ErrorMessage;
+            return;
+        }
+
+        isFormOpen = false;
+        successMessage = editingId == null
+            ? $"{request.FirstName} {request.LastName} was added."
+            : $"{request.FirstName} {request.LastName} was updated.";
+        await LoadAsync();
+    }
     // Waits for a pause in typing, then searches from page 1.
     private async Task OnSearchChanged()
     {

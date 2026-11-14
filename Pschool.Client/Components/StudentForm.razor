@@ -1,0 +1,86 @@
+@* Form for adding or editing a student.
+   Validation rules come from StudentRequest (shared with the API). *@
+
+<EditForm Model="Model" OnValidSubmit="HandleSubmit">
+    <DataAnnotationsValidator />
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <div class="alert alert-danger py-2">@ErrorMessage</div>
+    }
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label for="firstName" class="form-label">First name <span class="required">*</span></label>
+            <InputText id="firstName" class="form-control" @bind-Value="Model.FirstName" />
+            <ValidationMessage For="() => Model.FirstName" />
+        </div>
+
+        <div class="col-md-6">
+            <label for="lastName" class="form-label">Last name <span class="required">*</span></label>
+            <InputText id="lastName" class="form-control" @bind-Value="Model.LastName" />
+            <ValidationMessage For="() => Model.LastName" />
+        </div>
+
+        <div class="col-md-6">
+            <label for="dateOfBirth" class="form-label">Date of birth <span class="required">*</span></label>
+            <input id="dateOfBirth" type="date" class="form-control"
+                   max="@DateTime.Today.ToString("yyyy-MM-dd")"
+                   @bind="DateOfBirthInput" />
+            <ValidationMessage For="() => Model.DateOfBirth" />
+        </div>
+
+        <div class="col-md-6">
+            <label for="parentId" class="form-label">Parent <span class="required">*</span></label>
+            <InputSelect id="parentId" class="form-select" @bind-Value="Model.ParentId">
+                <option value="0">Choose a parent...</option>
+                @foreach (var parent in Parents)
+                {
+                    <option value="@parent.Id">@parent.FullName</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => Model.ParentId" />
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="button" class="btn btn-outline-secondary" @onclick="OnCancel" disabled="@IsSaving">
+            Cancel
+        </button>
+        <button type="submit" class="btn btn-accent" disabled="@IsSaving">
+            @(IsSaving ? "Saving..." : SubmitText)
+        </button>
+    </div>
+</EditForm>
+
+@code {
+    // The values being edited: empty for Add, filled for Edit.
+    [Parameter, EditorRequired] public StudentRequest Model { get; set; } = default!;
+
+    // Parents to choose from in the dropdown.
+    [Parameter, EditorRequired] public List<ParentLookup> Parents { get; set; } = new();
+
+    // Text on the save button.
+    [Parameter] public string SubmitText { get; set; } = "Save";
+
+    // True while waiting for the API; disables the buttons.
+    [Parameter] public bool IsSaving { get; set; }
+
+    // A message from the API, shown above the fields.
+    [Parameter] public string? ErrorMessage { get; set; }
+
+    // Called when the form passes validation and the user saves.
+    [Parameter] public EventCallback<StudentRequest> OnSave { get; set; }
+
+    // Called when the user clicks Cancel.
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    // Shows a blank date box instead of 01/01/0001 for a new student.
+    private DateOnly? DateOfBirthInput
+    {
+        get => Model.DateOfBirth == default ? null : Model.DateOfBirth;
+        set => Model.DateOfBirth = value ?? default;
+    }
+
+    private Task HandleSubmit() => OnSave.InvokeAsync(Model);
+}
