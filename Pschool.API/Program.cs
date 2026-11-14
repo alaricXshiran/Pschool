@@ -33,18 +33,33 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// ---- Development only ----
+// ---- Startup options (off unless turned on in settings) ----
 
-if (app.Environment.IsDevelopment())
+var applyMigrations = app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup");
+var seedSampleData = app.Configuration.GetValue<bool>("Database:SeedSampleData");
+var enableSwagger = app.Configuration.GetValue<bool>("Swagger:Enabled");
+
+if (applyMigrations || seedSampleData)
 {
-    // Bring the database up to date and add sample data if it is empty.
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<PschoolDbContext>();
 
-    await context.Database.MigrateAsync();
-    await DbSeeder.SeedAsync(context);
+    // Creates or updates the tables.
+    if (applyMigrations)
+    {
+        await context.Database.MigrateAsync();
+    }
 
-    // Test page for trying the API in the browser: /swagger
+    // Adds sample parents and students if the database is empty.
+    if (seedSampleData)
+    {
+        await DbSeeder.SeedAsync(context);
+    }
+}
+
+// Test page for trying the API in the browser: /swagger
+if (enableSwagger)
+{
     app.MapOpenApi();
     app.UseSwaggerUI(options =>
     {
