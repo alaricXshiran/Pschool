@@ -1,7 +1,8 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Pschool.Shared.Dtos;
 
 // What a client sends to create or edit a student.
-using System.ComponentModel.DataAnnotations;
 // No Id here: the database generates it.
 public class StudentRequest : IValidatableObject
 {
