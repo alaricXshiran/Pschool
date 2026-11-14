@@ -1,15 +1,16 @@
-   services:
-     db:
-       image: postgres:17
-       container_name: pschool-db
-       environment:
-         POSTGRES_USER: pschool
-         POSTGRES_PASSWORD: pschool123
-         POSTGRES_DB: pschooldb
-       ports:
-         - "5432:5432"
-       volumes:
-         - pschool-data:/var/lib/postgresql/data
+# PostgreSQL database. from .env
+services:
+  db:
+    image: postgres:17
+    container_name: pschool-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pschool}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pschool123}
+      POSTGRES_DB: ${POSTGRES_DB:-pschooldb}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pschool-data:/var/lib/postgresql/data
 
-   volumes:
-     pschool-data:
+volumes:
+  pschool-data:
