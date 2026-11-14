@@ -27,6 +27,13 @@ public class ParentService
         return await _http.GetFromJsonAsync<PagedResult<ParentResponse>>(url)
             ?? new PagedResult<ParentResponse>();
     }
+
+    // Every parent's Id and name, for dropdown lists.
+    public async Task<List<ParentLookup>> GetLookupAsync()
+    {
+        return await _http.GetFromJsonAsync<List<ParentLookup>>("api/parents/lookup")
+            ?? new List<ParentLookup>();
+    }
     // Send a new parent to the API.
     public async Task<ApiResult> CreateAsync(ParentRequest request)
     {

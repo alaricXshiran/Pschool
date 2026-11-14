@@ -33,4 +33,46 @@ public class StudentService
         return await _http.GetFromJsonAsync<PagedResult<StudentResponse>>(url)
             ?? new PagedResult<StudentResponse>();
     }
+
+    // Send a new student to the API.
+    public async Task<ApiResult> CreateAsync(StudentRequest request)
+    {
+        try
+        {
+            var response = await _http.PostAsJsonAsync("api/students", request);
+            return await ApiResult.FromResponseAsync(response);
+        }
+        catch (HttpRequestException)
+        {
+            return ApiResult.Fail("Could not reach the API. Check that it is running.");
+        }
+    }
+
+    // Send changed details for an existing student.
+    public async Task<ApiResult> UpdateAsync(int id, StudentRequest request)
+    {
+        try
+        {
+            var response = await _http.PutAsJsonAsync($"api/students/{id}", request);
+            return await ApiResult.FromResponseAsync(response);
+        }
+        catch (HttpRequestException)
+        {
+            return ApiResult.Fail("Could not reach the API. Check that it is running.");
+        }
+    }
+
+    // Delete a student.
+    public async Task<ApiResult> DeleteAsync(int id)
+    {
+        try
+        {
+            var response = await _http.DeleteAsync($"api/students/{id}");
+            return await ApiResult.FromResponseAsync(response);
+        }
+        catch (HttpRequestException)
+        {
+            return ApiResult.Fail("Could not reach the API. Check that it is running.");
+        }
+    }
 }

@@ -176,4 +176,21 @@ public class ParentsController : ControllerBase
 
         return NoContent();
     }
+
+    // GET /api/parents/lookup - every parent's Id and name, sorted by name, for dropdowns.
+    [HttpGet("lookup")]
+    public async Task<ActionResult<List<ParentLookup>>> GetParentLookup()
+    {
+        var parents = await _context.Parents
+            .OrderBy(parent => parent.FirstName)
+            .ThenBy(parent => parent.LastName)
+            .Select(parent => new ParentLookup
+            {
+                Id = parent.Id,
+                FullName = parent.FirstName + " " + parent.LastName
+            })
+            .ToListAsync();
+
+        return Ok(parents);
+    }
 }

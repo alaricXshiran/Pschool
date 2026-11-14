@@ -54,3 +54,10 @@ public class ParentResponse
     // Number of students this parent has (the "Siblings" column).
     public int SiblingsCount { get; set; }
 }
+
+// Minimal parent details for dropdown lists.
+public class ParentLookup
+{
+    public int Id { get; set; }
+    public string FullName { get; set; } = string.Empty;
+}
