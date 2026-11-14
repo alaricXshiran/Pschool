@@ -21,6 +21,7 @@
 {
     <div class="alert alert-success py-2">@successMessage</div>
 }
+
 <div class="ps-card">
     <div class="ps-card-header">
         <h2>Students List</h2>
@@ -95,12 +96,17 @@
                                 @student.ParentName
                             </td>
                             <td class="text-end text-nowrap">
-                                <button class="btn btn-icon" title="Edit" aria-label="Edit @student.FirstName @student.LastName"
+                                <button class="btn btn-icon" title="Edit"
+                                        aria-label="Edit @student.FirstName @student.LastName"
                                         @onclick="() => OpenEdit(student)">
                                     <i class="bi bi-pencil-square"></i>
                                 </button>
+                                <button class="btn btn-icon btn-icon-danger" title="Delete"
+                                        aria-label="Delete @student.FirstName @student.LastName"
+                                        @onclick="() => OpenDelete(student)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
                             </td>
-                            
                         </tr>
                     }
                 </tbody>
@@ -111,10 +117,41 @@
                PageChanged="GoToPage" />
     }
 </div>
+
 @* Add / edit window *@
 <Modal IsOpen="isFormOpen" Title="@(editingId == null ? "Add student" : "Edit student")" OnClose="CloseForm">
-    <StudentForm Model="formModel" Parents="parents" SubmitText="@(editingId == null ? "Add student" : "Save changes")"
-                 IsSaving="isSaving" ErrorMessage="@formError" OnSave="SaveAsync" OnCancel="CloseForm" />
+    <StudentForm Model="formModel"
+                 Parents="parents"
+                 SubmitText="@(editingId == null ? "Add student" : "Save changes")"
+                 IsSaving="isSaving"
+                 ErrorMessage="@formError"
+                 OnSave="SaveAsync"
+                 OnCancel="CloseForm" />
+</Modal>
+
+@* Delete confirmation window *@
+<Modal IsOpen="deleteStudent != null" Title="Delete student" OnClose="CloseDelete">
+    @if (deleteStudent != null)
+    {
+        @if (!string.IsNullOrWhiteSpace(deleteError))
+        {
+            <div class="alert alert-danger py-2">@deleteError</div>
+        }
+
+        <p>
+            Delete <strong>@deleteStudent.FirstName @deleteStudent.LastName</strong>
+            (child of @deleteStudent.ParentName)? This cannot be undone.
+        </p>
+
+        <div class="form-actions">
+            <button type="button" class="btn btn-outline-secondary" @onclick="CloseDelete" disabled="@isDeleting">
+                Cancel
+            </button>
+            <button type="button" class="btn btn-danger" @onclick="ConfirmDeleteAsync" disabled="@isDeleting">
+                @(isDeleting ? "Deleting..." : "Delete")
+            </button>
+        </div>
+    }
 </Modal>
 
 @code {
@@ -130,10 +167,10 @@
     // Cancels a waiting search when the user keeps typing.
     private CancellationTokenSource? searchDelay;
 
-    // Every parent, for the filter dropdown.
+    // Every parent, for the filter and form dropdowns.
     private List<ParentLookup> parents = new();
 
-    // The parent chosen in the dropdown; null means all parents.
+    // The parent chosen in the filter; null means all parents.
     private int? selectedParentId;
 
     // Add / edit form
@@ -146,6 +183,11 @@
     // Id of the student being edited; null when adding.
     private int? editingId;
 
+    // Delete: the student awaiting confirmation; the window is open while this is not null.
+    private StudentResponse? deleteStudent;
+    private bool isDeleting;
+    private string? deleteError;
+
     // The page of students from the API; null until it arrives.
     private PagedResult<StudentResponse>? result;
 
@@ -154,7 +196,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Fill the dropdown; the table still loads if this fails.
+        // Fills the dropdowns; the table still loads if this fails.
         try
         {
             parents = await ParentService.GetLookupAsync();
@@ -167,7 +209,7 @@
         await LoadAsync();
     }
 
-    // Fetches the current page using the search text.
+    // Fetches the current page using the filter and search text.
     private async Task LoadAsync()
     {
         errorMessage = null;
@@ -189,7 +231,7 @@
         await LoadAsync();
     }
 
-    // Runs when a parent is chosen in the dropdown; starts from page 1.
+    // Runs when a parent is chosen in the filter; starts from page 1.
     private async Task OnParentChanged()
     {
         currentPage = 1;
@@ -251,6 +293,52 @@
             : $"{request.FirstName} {request.LastName} was updated.";
         await LoadAsync();
     }
+
+    // Opens the confirmation window for this student.
+    private void OpenDelete(StudentResponse student)
+    {
+        deleteStudent = student;
+        deleteError = null;
+        successMessage = null;
+    }
+
+    private void CloseDelete()
+    {
+        deleteStudent = null;
+    }
+
+    // Deletes after confirmation; steps back a page if the last row on it was removed.
+    private async Task ConfirmDeleteAsync()
+    {
+        if (deleteStudent == null)
+        {
+            return;
+        }
+
+        isDeleting = true;
+        deleteError = null;
+
+        var outcome = await StudentService.DeleteAsync(deleteStudent.Id);
+
+        isDeleting = false;
+
+        if (!outcome.Success)
+        {
+            deleteError = outcome.ErrorMessage;
+            return;
+        }
+
+        successMessage = $"{deleteStudent.FirstName} {deleteStudent.LastName} was deleted.";
+        deleteStudent = null;
+
+        if (result != null && result.Items.Count == 1 && currentPage > 1)
+        {
+            currentPage--;
+        }
+
+        await LoadAsync();
+    }
+
     // Waits for a pause in typing, then searches from page 1.
     private async Task OnSearchChanged()
     {
