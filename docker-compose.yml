@@ -1,4 +1,6 @@
-# PostgreSQL database. from .env
+# Whole app: PostgreSQL database, the API and the Blazor client.
+# Start with: docker compose up --build
+# Values come from .env, with defaults if it is missing.
 services:
   db:
     image: postgres:17
@@ -11,6 +13,43 @@ services:
       - "5432:5432"
     volumes:
       - pschool-data:/var/lib/postgresql/data
+    # Reports healthy once PostgreSQL accepts connections.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pschool} -d ${POSTGRES_DB:-pschooldb}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Pschool.API/Dockerfile
+    container_name: pschool-api
+    # Starts only after the database is healthy.
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=${POSTGRES_DB:-pschooldb};Username=${POSTGRES_USER:-pschool};Password=${POSTGRES_PASSWORD:-pschool123};GSS Encryption Mode=Disable"
+      Database__ApplyMigrationsOnStartup: "true"
+      Database__SeedSampleData: "true"
+      Swagger__Enabled: "true"
+      Cors__AllowedOrigins__0: "http://localhost:${CLIENT_PORT:-8080}"
+    ports:
+      - "${API_PORT:-5080}:8080"
+
+  client:
+    build:
+      context: .
+      dockerfile: Pschool.Client/Dockerfile
+    container_name: pschool-client
+    depends_on:
+      - api
+    environment:
+      # The browser runs on the user's computer, so it reaches the API through localhost.
+      API_BASE_URL: "http://localhost:${API_PORT:-5080}/"
+    ports:
+      - "${CLIENT_PORT:-8080}:80"
 
 volumes:
   pschool-data:

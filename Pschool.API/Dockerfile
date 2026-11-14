@@ -18,8 +18,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# Listen on port 8080 inside the container.
-ENV ASPNETCORE_URLS=http://+:8080
+# The runtime image listens on port 8080 by default.
 EXPOSE 8080
 
 # Run as the image's built-in non-root user.
