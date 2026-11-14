@@ -1,4 +1,4 @@
-/* Colours */
+/* Light colours (default) */
 :root {
     --ps-sidebar: #1f2a44;
     --ps-sidebar-dark: #17203a;
@@ -10,6 +10,24 @@
     --ps-text: #1f2937;
     --ps-muted: #6b7280;
     --ps-border: #e5e7eb;
+    --ps-table-head: #f9fafb;
+    --ps-badge-text: #9a5a12;
+    --ps-hover: rgba(31, 42, 68, 0.08);
+}
+
+/* Dark colours, used when <html> has data-theme="dark" */
+[data-theme="dark"] {
+    --ps-sidebar: #111827;
+    --ps-sidebar-dark: #0b1120;
+    --ps-sidebar-text: #aab4c8;
+    --ps-page: #0f172a;
+    --ps-card: #1e293b;
+    --ps-text: #e5e7eb;
+    --ps-muted: #94a3b8;
+    --ps-border: #334155;
+    --ps-table-head: #172033;
+    --ps-badge-text: #f5c08a;
+    --ps-hover: rgba(255, 255, 255, 0.08);
 }
 
 /* Base font and background */
@@ -51,7 +69,7 @@ code {
     margin: 0.25rem 0 0;
 }
 
-/* White card around tables */
+/* Card around tables */
 .ps-card {
     background-color: var(--ps-card);
     border: 1px solid var(--ps-border);
@@ -125,7 +143,7 @@ code {
 
 /* Tables */
 .ps-table th {
-    background-color: #f9fafb;
+    background-color: var(--ps-table-head);
     color: var(--ps-muted);
     font-size: 0.75rem;
     font-weight: 600;
@@ -141,6 +159,12 @@ code {
     border-color: var(--ps-border);
 }
 
+/* Bootstrap table colours follow the theme */
+.ps-table {
+    --bs-table-bg: var(--ps-card);
+    --bs-table-color: var(--ps-text);
+}
+
 .ps-table tbody tr:hover td {
     background-color: rgba(242, 166, 90, 0.06);
 }
@@ -152,7 +176,7 @@ code {
     padding: 0.15rem 0.5rem;
     border-radius: 999px;
     background-color: rgba(242, 166, 90, 0.18);
-    color: #9a5a12;
+    color: var(--ps-badge-text);
     font-weight: 600;
     font-size: 0.8rem;
 }
@@ -189,7 +213,7 @@ code {
 }
 
 .btn-icon:hover {
-    background-color: rgba(31, 42, 68, 0.08);
+    background-color: var(--ps-hover);
     color: var(--ps-text);
 }
 

@@ -19,6 +19,28 @@
     <link href="Pschool.Client.styles.css" rel="stylesheet" />
     <script type="importmap"></script>
 </head>
+    <!-- Applies the saved or system theme before the page appears, to avoid a flash -->
+    <script>
+        window.psTheme = {
+            get: function () {
+                return document.documentElement.getAttribute("data-theme") || "light";
+            },
+            set: function (theme) {
+                document.documentElement.setAttribute("data-theme", theme);
+                document.documentElement.setAttribute("data-bs-theme", theme);
+                try { localStorage.setItem("ps-theme", theme); } catch (e) { }
+            }
+        };
+
+        (function () {
+            var saved = null;
+            try { saved = localStorage.getItem("ps-theme"); } catch (e) { }
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            var theme = saved || (prefersDark ? "dark" : "light");
+            document.documentElement.setAttribute("data-theme", theme);
+            document.documentElement.setAttribute("data-bs-theme", theme);
+        })();
+    </script>
 
 <body>
     <div id="app">

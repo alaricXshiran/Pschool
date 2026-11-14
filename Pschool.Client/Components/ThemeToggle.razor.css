@@ -1,0 +1,21 @@
+/* Rounded toggle in the top bar */
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.8rem;
+    border: 1px solid var(--ps-border);
+    border-radius: 999px;
+    background-color: transparent;
+    color: var(--ps-text);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.theme-toggle:hover {
+    background-color: var(--ps-hover);
+}
+
+.theme-toggle .bi {
+    color: var(--ps-accent);
+}
