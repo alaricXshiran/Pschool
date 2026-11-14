@@ -1,0 +1,8 @@
+# Files Docker never copies into an image
+**/bin/
+**/obj/
+.git/
+.vs/
+.vscode/
+.env
+*.md
