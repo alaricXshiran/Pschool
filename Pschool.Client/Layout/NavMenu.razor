@@ -1,24 +1,26 @@
-﻿   <div class="top-row ps-3 navbar navbar-dark">
-       <div class="container-fluid">
-           <a class="navbar-brand" href="">Pschool</a>
-       </div>
-   </div>
+﻿<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">
+            <i class="bi bi-mortarboard-fill brand-icon" aria-hidden="true"></i> Pschool
+        </a>
+    </div>
+</div>
 
-   @* On small screens this checkbox opens and closes the menu. *@
-   <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+@* On small screens this checkbox opens and closes the menu. *@
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
 
-   <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-       <nav class="flex-column">
-           <div class="nav-item px-3">
-               <NavLink class="nav-link" href="parents">
-                   <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Parents
-               </NavLink>
-           </div>
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="parents">
+                <i class="bi bi-people-fill" aria-hidden="true"></i> Parents
+            </NavLink>
+        </div>
 
-           <div class="nav-item px-3">
-               <NavLink class="nav-link" href="students">
-                   <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Students
-               </NavLink>
-           </div>
-       </nav>
-   </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="students">
+                <i class="bi bi-backpack-fill" aria-hidden="true"></i> Students
+            </NavLink>
+        </div>
+    </nav>
+</div>

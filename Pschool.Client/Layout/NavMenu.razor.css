@@ -1,16 +1,4 @@
-.page {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-}
 
-main {
-    flex: 1;
-}
-
-.sidebar {
-    background-color: var(--ps-sidebar);
-}
 
    /* ---- Top of the menu: brand name ---- */
    .top-row {

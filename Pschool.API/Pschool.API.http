@@ -1,6 +1,14 @@
 @Pschool.API_HostAddress = http://localhost:5292
 
-GET {{Pschool.API_HostAddress}}/weatherforecast/
+GET {{Pschool.API_HostAddress}}/api/parents
 Accept: application/json
 
 ###
+
+GET {{Pschool.API_HostAddress}}/api/students
+Accept: application/json
+
+###
+
+GET {{Pschool.API_HostAddress}}/api/parents/lookup
+Accept: application/json
