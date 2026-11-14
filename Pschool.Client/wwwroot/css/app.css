@@ -105,6 +105,24 @@ code {
     padding-left: 2rem;
 }
 
+/* Filter dropdown and search box side by side */
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.parent-filter {
+    width: auto;
+    min-width: 180px;
+}
+
+.parent-filter:focus {
+    border-color: var(--ps-accent);
+    box-shadow: 0 0 0 0.2rem rgba(242, 166, 90, 0.3);
+}
+
 /* Tables */
 .ps-table th {
     background-color: #f9fafb;

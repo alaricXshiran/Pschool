@@ -1,5 +1,6 @@
 @page "/students"
 @inject StudentService StudentService
+@inject ParentService ParentService
 @implements IDisposable
 
 <PageTitle>Students</PageTitle>
@@ -14,10 +15,22 @@
 <div class="ps-card">
     <div class="ps-card-header">
         <h2>Students List</h2>
-        <div class="search-box">
-            <i class="bi bi-search" aria-hidden="true"></i>
-            <input type="search" class="form-control form-control-sm" placeholder="Search student or parent name"
-                   aria-label="Search students" @bind="searchText" @bind:event="oninput" @bind:after="OnSearchChanged" />
+        <div class="filters">
+            <select class="form-select form-select-sm parent-filter" aria-label="Filter by parent"
+                    @bind="selectedParentId" @bind:after="OnParentChanged">
+                <option value="">All parents</option>
+                @foreach (var parent in parents)
+                {
+                    <option value="@parent.Id">@parent.FullName</option>
+                }
+            </select>
+
+            <div class="search-box">
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <input type="search" class="form-control form-control-sm" placeholder="Search student or parent name"
+                       aria-label="Search students" @bind="searchText" @bind:event="oninput"
+                       @bind:after="OnSearchChanged" />
+            </div>
         </div>
     </div>
 
@@ -32,9 +45,18 @@
     else if (result.Items.Count == 0)
     {
         <p class="state-message">
-            @(string.IsNullOrWhiteSpace(searchText)
-                ? "No students found."
-                : $"No students match \"{searchText}\".")
+            @if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                <text>No students match "@searchText".</text>
+            }
+            else if (selectedParentId.HasValue)
+            {
+                <text>This parent has no students yet.</text>
+            }
+            else
+            {
+                <text>No students found.</text>
+            }
         </p>
     }
     else
@@ -86,6 +108,12 @@
     // Cancels a waiting search when the user keeps typing.
     private CancellationTokenSource? searchDelay;
 
+    // Every parent, for the filter dropdown.
+    private List<ParentLookup> parents = new();
+
+    // The parent chosen in the dropdown; null means all parents.
+    private int? selectedParentId;
+
     // The page of students from the API; null until it arrives.
     private PagedResult<StudentResponse>? result;
 
@@ -94,6 +122,16 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Fill the dropdown; the table still loads if this fails.
+        try
+        {
+            parents = await ParentService.GetLookupAsync();
+        }
+        catch (Exception)
+        {
+            parents = new();
+        }
+
         await LoadAsync();
     }
 
@@ -104,7 +142,7 @@
 
         try
         {
-            result = await StudentService.GetPageAsync(currentPage, PageSize, search: searchText);
+            result = await StudentService.GetPageAsync(currentPage, PageSize, selectedParentId, searchText);
         }
         catch (Exception)
         {
@@ -116,6 +154,13 @@
     private async Task GoToPage(int page)
     {
         currentPage = page;
+        await LoadAsync();
+    }
+
+    // Runs when a parent is chosen in the dropdown; starts from page 1.
+    private async Task OnParentChanged()
+    {
+        currentPage = 1;
         await LoadAsync();
     }
 
